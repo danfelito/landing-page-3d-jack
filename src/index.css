@@ -2,31 +2,40 @@
 @tailwind components;
 @tailwind utilities;
 
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-html,
-body,
-#root {
-  min-height: 100%;
-  background: #0c0c0c;
-  font-family: 'Kanit', sans-serif;
-}
-
-body {
-  overflow-x: hidden;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+html, body, #root { min-height: 100%; background: #0c0c0c; font-family: 'Kanit', sans-serif; }
+body { overflow-x: hidden; }
+img { display: block; }
 
 .hero-heading {
-  background: linear-gradient(180deg, #646973 0%, #bbccd7 100%);
+  background: linear-gradient(180deg, #737b89 0%, #d7e2ea 48%, #8b94a3 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
+.hero-aura {
+  position: absolute;
+  inset: 15% 15% 3%;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 42% 44%, rgba(183, 0, 168, .18), transparent 36%),
+    radial-gradient(circle at 60% 46%, rgba(45, 211, 255, .16), transparent 34%);
+  filter: blur(30px);
+  pointer-events: none;
+}
+
+.hero-cyborg {
+  filter:
+    drop-shadow(0 0 24px rgba(182, 0, 168, .22))
+    drop-shadow(0 0 34px rgba(45, 211, 255, .14));
+}
+
+.project-preview {
+  box-shadow: 0 18px 60px rgba(0, 0, 0, .28);
+}
+
+@media (max-width: 480px) {
+  .hero-aura { inset: 18% 0 4%; }
 }
