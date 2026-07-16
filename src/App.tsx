@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
-import cyborgPortrait from './assets/cyborg-daniel';
+import cyborgPortrait from './assets/robot-data';
 
 type Project = {
   title: string;
