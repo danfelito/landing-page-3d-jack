@@ -39,3 +39,21 @@ img { display: block; }
 @media (max-width: 480px) {
   .hero-aura { inset: 18% 0 4%; }
 }
+
+.live-project-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  border: 0;
+  pointer-events: none;
+  transform: scale(.5);
+  transform-origin: top left;
+  background: white;
+}
+
+.project-visual iframe,
+.project-visual img {
+  backface-visibility: hidden;
+}
