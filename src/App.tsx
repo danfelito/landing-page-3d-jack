@@ -1,44 +1,49 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpRight, ExternalLink, ImageOff } from 'lucide-react';
+import { ArrowUpRight, ExternalLink, ImageOff, Mail, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import cyborgFallback from './assets/robot-data';
 
 type Project = {
+  slug: string;
   title: string;
   url: string;
   platform: string;
   description: string;
-  frameable: boolean;
 };
+
+const whatsappUrl =
+  'https://wa.me/522294648962?text=Hola%20Daniel%2C%20vi%20tu%20portafolio%20y%20quiero%20hablar%20sobre%20un%20proyecto.';
+const emailUrl =
+  'mailto:danfelavicas@gmail.com?subject=Contacto%20desde%20el%20portafolio%20de%20Daniel';
 
 const projects: Project[] = [
   {
+    slug: 'firma-de-comisiones',
     title: 'Firma de Comisiones',
     url: 'https://firma-de-comisiones-1.onrender.com/',
     platform: 'Render',
     description: 'Aplicación publicada para gestión y firma de acuerdos de comisión.',
-    frameable: true,
   },
   {
+    slug: 'harbest-landing',
     title: 'Harbest Landing',
     url: 'https://harbestlanding.danfelavicas.workers.dev/#inicio',
     platform: 'Cloudflare',
     description: 'Landing comercial publicada para una propuesta del sector agro y tecnología.',
-    frameable: true,
   },
   {
+    slug: 'proyecto-zai-01',
     title: 'Proyecto Z.AI 01',
     url: 'https://chat.z.ai/c/0bf041c1-2ed3-4ec1-9ce7-0ec63e14e6aa',
     platform: 'Z.AI',
     description: 'Proyecto desarrollado y compartido mediante una publicación de Z.AI.',
-    frameable: false,
   },
   {
+    slug: 'proyecto-zai-02',
     title: 'Proyecto Z.AI 02',
     url: 'https://chat.z.ai/c/cb0eafde-199d-4182-bcdc-0f5fc0ac4a90',
     platform: 'Z.AI',
     description: 'Segunda muestra de proyecto publicado y compartido mediante Z.AI.',
-    frameable: false,
   },
 ];
 
@@ -50,13 +55,20 @@ const services = [
   ['05', 'Prototipos digitales', 'Conceptos funcionales que permiten validar ideas antes de escalar su desarrollo.'],
 ];
 
-function screenshotSources(url: string) {
-  const raw = url.replace('#inicio', '');
-  return [
-    `https://image.thum.io/get/width/1400/crop/900/noanimate/${raw}`,
-    `https://s.wordpress.com/mshots/v1/${encodeURIComponent(raw)}?w=1400`,
-    `https://api.microlink.io/?url=${encodeURIComponent(raw)}&screenshot=true&meta=false&embed=screenshot.url`,
-  ];
+function remoteScreenshotUrl(url: string) {
+  const params = new URLSearchParams({
+    url: url.replace('#inicio', ''),
+    screenshot: 'true',
+    waitUntil: 'networkidle2',
+    waitForTimeout: '9000',
+    prerender: 'true',
+    force: 'true',
+    retry: '2',
+    timeout: '60000',
+    embed: 'screenshot.url',
+  });
+
+  return `https://api.microlink.io/?${params.toString()}`;
 }
 
 function FadeIn({ children, delay = 0, y = 24, className = '' }: { children: ReactNode; delay?: number; y?: number; className?: string }) {
@@ -76,12 +88,42 @@ function FadeIn({ children, delay = 0, y = 24, className = '' }: { children: Rea
 function ContactButton() {
   return (
     <a
-      href="#contacto"
+      href={whatsappUrl}
+      target="_blank"
+      rel="noreferrer"
       className="inline-flex items-center gap-2 rounded-full border-2 border-white px-6 py-3 text-xs font-semibold uppercase tracking-[.18em] text-white transition hover:scale-105 sm:px-8"
       style={{ background: 'linear-gradient(123deg,#18011F 7%,#B600A8 37%,#7621B0 72%,#BE4C00 100%)' }}
     >
-      Contáctame <ArrowUpRight size={17} />
+      Contáctame <MessageCircle size={17} />
     </a>
+  );
+}
+
+function HeroCyborg() {
+  const [src, setSrc] = useState('/cyborg-daniel.webp?v=3');
+  const [usingFallback, setUsingFallback] = useState(false);
+
+  return (
+    <img
+      src={src}
+      alt="Ciborg de Daniel"
+      loading="eager"
+      fetchPriority="high"
+      decoding="sync"
+      className="hero-cyborg visible block h-auto max-h-[67vh] w-auto max-w-full object-contain opacity-100 sm:max-h-[72vh] lg:max-h-[78vh]"
+      onLoad={(event) => {
+        if (event.currentTarget.naturalWidth < 300 && !usingFallback) {
+          setUsingFallback(true);
+          setSrc(cyborgFallback);
+        }
+      }}
+      onError={() => {
+        if (!usingFallback) {
+          setUsingFallback(true);
+          setSrc(cyborgFallback);
+        }
+      }}
+    />
   );
 }
 
@@ -115,14 +157,7 @@ function HeroSection() {
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-[102px] z-[15] mx-auto flex w-[min(94vw,680px)] justify-center opacity-100 sm:bottom-[58px] sm:w-[min(78vw,720px)] md:w-[min(60vw,760px)] lg:bottom-[32px] lg:w-[min(48vw,790px)]">
-        <img
-          src={cyborgFallback}
-          alt="Ciborg de Daniel"
-          loading="eager"
-          fetchPriority="high"
-          decoding="sync"
-          className="hero-cyborg visible block h-auto max-h-[67vh] w-auto max-w-full object-contain opacity-100 sm:max-h-[72vh] lg:max-h-[78vh]"
-        />
+        <HeroCyborg />
       </div>
 
       <div className="absolute inset-x-0 bottom-0 z-30 mx-auto flex max-w-[1600px] items-end justify-between gap-3 px-5 pb-5 sm:px-8 sm:pb-8 md:px-10">
@@ -136,61 +171,58 @@ function HeroSection() {
 }
 
 function ProjectVisual({ project, compact = false }: { project: Project; compact?: boolean }) {
-  const sources = useMemo(() => screenshotSources(project.url), [project.url]);
-  const [sourceIndex, setSourceIndex] = useState(0);
+  const localImage = `/projects/${project.slug}.jpg?v=3`;
+  const remoteImage = useMemo(() => remoteScreenshotUrl(project.url), [project.url]);
+  const [src, setSrc] = useState(localImage);
+  const [stage, setStage] = useState<'local' | 'remote' | 'failed'>('local');
   const [loaded, setLoaded] = useState(false);
-  const exhausted = sourceIndex >= sources.length;
 
   useEffect(() => {
-    setSourceIndex(0);
+    setSrc(localImage);
+    setStage('local');
     setLoaded(false);
-  }, [project.url]);
+  }, [localImage]);
+
+  const tryNextSource = () => {
+    setLoaded(false);
+    if (stage === 'local') {
+      setStage('remote');
+      setSrc(remoteImage);
+    } else {
+      setStage('failed');
+    }
+  };
 
   return (
     <div className="project-visual relative h-full w-full overflow-hidden bg-[#15151a]">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(182,0,168,.34),transparent_34%),radial-gradient(circle_at_82%_20%,rgba(45,211,255,.28),transparent_30%),linear-gradient(135deg,#15151a,#090a0e)]" />
 
-      {project.frameable && (
-        <div className="absolute inset-0 overflow-hidden bg-white">
-          <iframe
-            src={project.url}
-            title={`Vista en vivo de ${project.title}`}
-            loading="lazy"
-            tabIndex={-1}
-            aria-hidden="true"
-            className="live-project-frame"
-          />
-        </div>
-      )}
-
-      {!exhausted && (
+      {stage !== 'failed' && (
         <img
-          key={sources[sourceIndex]}
-          src={sources[sourceIndex]}
+          key={src}
+          src={src}
           alt={`Captura del proyecto terminado ${project.title}`}
           loading={compact ? 'eager' : 'lazy'}
           referrerPolicy="no-referrer"
           className={`absolute inset-0 h-full w-full object-cover object-top transition duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
           onLoad={(event) => {
             const image = event.currentTarget;
-            if (image.naturalWidth < 300 || image.naturalHeight < 180) {
-              setLoaded(false);
-              setSourceIndex((index) => index + 1);
+            if (image.naturalWidth < 500 || image.naturalHeight < 280) {
+              tryNextSource();
               return;
             }
             setLoaded(true);
           }}
-          onError={() => {
-            setLoaded(false);
-            setSourceIndex((index) => index + 1);
-          }}
+          onError={tryNextSource}
         />
       )}
 
-      {!project.frameable && !loaded && (
+      {!loaded && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center text-white/80">
           <ImageOff size={30} className="opacity-65" />
-          <span className="text-sm uppercase tracking-[.2em] text-white/55">Cargando captura</span>
+          <span className="text-sm uppercase tracking-[.2em] text-white/55">
+            {stage === 'failed' ? 'Vista no disponible' : 'Preparando vista completa'}
+          </span>
           <strong className="text-xl text-white">{project.title}</strong>
         </div>
       )}
@@ -242,7 +274,7 @@ function PublishedProjectsCarousel() {
         <p className="text-xs uppercase tracking-[.3em] text-ice/55">Muestras reales publicadas</p>
         <h2 className="hero-heading mt-3 text-[clamp(2.8rem,8vw,7rem)] font-black uppercase leading-none">Proyectos en línea</h2>
         <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-ice/65 sm:text-base">
-          Vistas en vivo y capturas automáticas de las versiones publicadas. Cada tarjeta abre el proyecto original.
+          Capturas generadas después de que cada portal termina de cargar. Cada tarjeta abre el proyecto original.
         </p>
       </div>
 
@@ -318,7 +350,17 @@ function ContactSection() {
   return (
     <section id="contacto" className="bg-ink px-6 py-28 text-center text-ice">
       <h2 className="hero-heading text-[clamp(3rem,9vw,8rem)] font-black uppercase">Hablemos</h2>
-      <p className="mx-auto mt-5 max-w-xl text-lg text-ice/70">Disponible para proyectos de diseño, desarrollo web, automatización e inteligencia artificial.</p>
+      <p className="mx-auto mt-5 max-w-xl text-lg text-ice/70">
+        Disponible para proyectos de diseño, desarrollo web, automatización e inteligencia artificial.
+      </p>
+      <div className="mt-9 flex flex-wrap justify-center gap-4">
+        <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 transition hover:bg-white/10">
+          <MessageCircle size={19} /> WhatsApp
+        </a>
+        <a href={emailUrl} className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 transition hover:bg-white/10">
+          <Mail size={19} /> danfelavicas@gmail.com
+        </a>
+      </div>
     </section>
   );
 }
