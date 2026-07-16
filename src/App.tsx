@@ -1,93 +1,290 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
-import { ArrowUpRight } from 'lucide-react';
+import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowUpRight, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
-import cyborgPortrait from './assets/robot-data';
+import cyborgPortrait from './assets/cyborg-daniel';
 
-const projectPreviews = [
-  ['Harbest Landing','https://github.com/danfelito/Harbest-landing','https://opengraph.githubassets.com/1/danfelito/Harbest-landing'],
-  ['Círculo Internacional','https://github.com/danfelito/Circulo-Internacional','https://opengraph.githubassets.com/1/danfelito/Circulo-Internacional'],
-  ['Círculo Inmobiliaria','https://github.com/danfelito/Circulo-Inmobiliaria','https://opengraph.githubassets.com/1/danfelito/Circulo-Inmobiliaria'],
-  ['Página Web Demo','https://github.com/danfelito/Pagina-web-demo','https://opengraph.githubassets.com/1/danfelito/Pagina-web-demo'],
-  ['Firma de Comisiones','https://github.com/danfelito/Firma-de-comisiones','https://opengraph.githubassets.com/1/danfelito/Firma-de-comisiones'],
-  ['Círculo Bienes Raíces','https://github.com/danfelito/circulo-bienes-raices','https://opengraph.githubassets.com/1/danfelito/circulo-bienes-raices'],
-  ['Brasil MX','https://github.com/danfelito/brasil-mx','https://opengraph.githubassets.com/1/danfelito/brasil-mx'],
-  ['Landing 3D Daniel','https://landing-page-3d-jack.onrender.com','https://opengraph.githubassets.com/1/danfelito/landing-page-3d-jack'],
-] as const;
+type Project = {
+  title: string;
+  url: string;
+  platform: string;
+  description: string;
+};
 
-const services = [
-  ['01','Modelado 3D','Creación de objetos, personajes y ambientes detallados para marcas, productos y experiencias digitales.'],
-  ['02','Renderizado','Renders de alta calidad con iluminación, texturas y materiales para presentar conceptos con impacto.'],
-  ['03','Diseño en movimiento','Animaciones y piezas dinámicas que agregan narrativa y profundidad visual.'],
-  ['04','Identidad visual','Sistemas visuales coherentes, desde logotipos hasta estilos completos de marca.'],
-  ['05','Diseño web','Sitios modernos, limpios y enfocados en conversión y experiencia de usuario.'],
+const projects: Project[] = [
+  {
+    title: 'Firma de Comisiones',
+    url: 'https://firma-de-comisiones-1.onrender.com/',
+    platform: 'Render',
+    description: 'Aplicación publicada para gestión y firma de acuerdos de comisión.',
+  },
+  {
+    title: 'Landing 3D Daniel',
+    url: 'https://landing-page-3d-jack.onrender.com/',
+    platform: 'Render',
+    description: 'Portafolio visual con animaciones, servicios y presentación de proyectos.',
+  },
+  {
+    title: 'Harbest Landing',
+    url: 'https://harbestlanding.danfelavicas.workers.dev/#inicio',
+    platform: 'Cloudflare',
+    description: 'Landing comercial publicada para una propuesta del sector agro y tecnología.',
+  },
+  {
+    title: 'Proyecto Z.AI 01',
+    url: 'https://chat.z.ai/c/0bf041c1-2ed3-4ec1-9ce7-0ec63e14e6aa',
+    platform: 'Z.AI',
+    description: 'Proyecto desarrollado y compartido mediante una publicación de Z.AI.',
+  },
+  {
+    title: 'Proyecto Z.AI 02',
+    url: 'https://chat.z.ai/c/cb0eafde-199d-4182-bcdc-0f5fc0ac4a90',
+    platform: 'Z.AI',
+    description: 'Segunda muestra de proyecto publicado y compartido mediante Z.AI.',
+  },
 ];
 
+const services = [
+  ['01', 'Diseño web', 'Sitios modernos, limpios y enfocados en conversión y experiencia de usuario.'],
+  ['02', 'Automatización', 'Flujos y herramientas digitales que simplifican procesos comerciales y operativos.'],
+  ['03', 'Experiencias con IA', 'Interfaces y soluciones apoyadas por inteligencia artificial para negocios y proyectos.'],
+  ['04', 'Identidad visual', 'Sistemas visuales coherentes para comunicar una presencia clara y memorable.'],
+  ['05', 'Prototipos digitales', 'Conceptos funcionales que permiten validar ideas antes de escalar su desarrollo.'],
+];
+
+function screenshotUrl(url: string) {
+  return `https://s.wordpress.com/mshots/v1/${encodeURIComponent(url)}?w=1400`;
+}
+
 function FadeIn({ children, delay = 0, y = 24, className = '' }: { children: ReactNode; delay?: number; y?: number; className?: string }) {
-  return <motion.div initial={{ opacity: 0, y }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.15 }} transition={{ duration: 0.7, delay }} className={className}>{children}</motion.div>;
+  return (
+    <motion.div
+      initial={{ opacity: 0, y }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.15 }}
+      transition={{ duration: 0.7, delay, ease: [0.25, 0.1, 0.25, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
 }
 
 function ContactButton() {
-  return <a href="#contacto" className="inline-flex rounded-full border-2 border-white px-7 py-3 text-xs font-semibold uppercase tracking-[.18em] text-white transition hover:scale-105" style={{ background: 'linear-gradient(123deg,#18011F 7%,#B600A8 37%,#7621B0 72%,#BE4C00 100%)' }}>Contáctame</a>;
+  return (
+    <a
+      href="#contacto"
+      className="inline-flex items-center gap-2 rounded-full border-2 border-white px-6 py-3 text-xs font-semibold uppercase tracking-[.18em] text-white transition hover:scale-105 sm:px-8"
+      style={{ background: 'linear-gradient(123deg,#18011F 7%,#B600A8 37%,#7621B0 72%,#BE4C00 100%)' }}
+    >
+      Contáctame <ArrowUpRight size={17} />
+    </a>
+  );
 }
 
 function HeroSection() {
-  return <section className="relative min-h-[780px] overflow-hidden bg-ink md:min-h-screen">
-    <nav className="relative z-30 flex flex-wrap justify-center gap-x-5 gap-y-2 px-5 pt-6 text-xs font-medium uppercase tracking-[.14em] text-ice sm:justify-between sm:px-8 sm:text-sm md:px-10 md:text-lg">
-      {[['Acerca de','about'],['Servicios','servicios'],['Proyectos','proyectos'],['Contacto','contacto']].map(([title,id]) => <a key={id} href={`#${id}`} className="hover:opacity-70">{title}</a>)}
-    </nav>
-    <div className="relative z-20 mx-auto mt-8 max-w-[1500px] px-4 text-center sm:mt-5 md:px-8">
-      <FadeIn>
-        <p className="mb-1 text-[clamp(1rem,2.2vw,2rem)] font-medium uppercase tracking-[.34em] text-ice/75">Hola, soy</p>
-        <h1 className="hero-heading mx-auto max-w-full text-[clamp(4.3rem,15vw,14rem)] font-black uppercase leading-[.82] tracking-[-.055em]">Daniel</h1>
+  return (
+    <section className="relative isolate min-h-[760px] overflow-hidden bg-ink sm:min-h-[820px] lg:min-h-screen">
+      <div className="hero-aura" aria-hidden="true" />
+
+      <nav className="relative z-40 mx-auto flex max-w-[1600px] flex-wrap justify-center gap-x-5 gap-y-2 px-5 pt-6 text-[11px] font-medium uppercase tracking-[.14em] text-ice sm:justify-between sm:px-8 sm:text-sm md:px-10 md:text-base">
+        {[
+          ['Acerca de', 'about'],
+          ['Servicios', 'servicios'],
+          ['Proyectos', 'proyectos'],
+          ['Contacto', 'contacto'],
+        ].map(([text, id]) => (
+          <a key={id} href={`#${id}`} className="transition hover:opacity-65">
+            {text}
+          </a>
+        ))}
+      </nav>
+
+      <div className="relative z-20 mx-auto mt-10 max-w-[1560px] px-4 text-center sm:mt-6 md:px-8 lg:mt-2">
+        <FadeIn>
+          <p className="mb-2 text-[clamp(.78rem,1.4vw,1.4rem)] font-medium uppercase tracking-[.34em] text-ice/75 sm:mb-1">
+            Hola, soy
+          </p>
+          <h1 className="hero-heading mx-auto text-[clamp(4.6rem,14.2vw,13.6rem)] font-black uppercase leading-[.82] tracking-[-.06em]">
+            Daniel
+          </h1>
+        </FadeIn>
+      </div>
+
+      <FadeIn
+        delay={0.12}
+        className="pointer-events-none absolute inset-x-0 bottom-[102px] z-10 mx-auto flex w-[min(94vw,680px)] justify-center sm:bottom-[58px] sm:w-[min(78vw,720px)] md:w-[min(60vw,760px)] lg:bottom-[32px] lg:w-[min(48vw,790px)]"
+      >
+        <img
+          src={cyborgPortrait}
+          alt="Ciborg de Daniel"
+          fetchPriority="high"
+          className="hero-cyborg block h-auto max-h-[67vh] w-auto max-w-full object-contain sm:max-h-[72vh] lg:max-h-[78vh]"
+        />
       </FadeIn>
-    </div>
-    <FadeIn delay={0.15} className="pointer-events-none absolute inset-x-0 bottom-[108px] z-10 mx-auto w-[min(82vw,650px)] sm:bottom-[50px] md:w-[min(52vw,690px)] lg:w-[min(46vw,720px)]">
-      <img src={cyborgPortrait} alt="Ciborg de Daniel" className="h-auto w-full object-contain drop-shadow-[0_0_32px_rgba(182,0,168,0.26)] drop-shadow-[0_0_46px_rgba(40,210,255,0.18)]" />
-    </FadeIn>
-    <div className="absolute inset-x-0 bottom-0 z-30 flex items-end justify-between gap-4 px-5 pb-6 sm:px-8 md:px-10 md:pb-9">
-      <p className="max-w-[175px] text-[11px] font-light uppercase leading-snug tracking-[.08em] text-ice sm:max-w-[250px] sm:text-sm md:text-lg">Creador digital 3D enfocado en proyectos visuales impactantes.</p>
-      <ContactButton />
-    </div>
-  </section>;
+
+      <div className="absolute inset-x-0 bottom-0 z-30 mx-auto flex max-w-[1600px] items-end justify-between gap-3 px-5 pb-5 sm:px-8 sm:pb-8 md:px-10">
+        <p className="max-w-[170px] text-[10px] font-light uppercase leading-snug tracking-[.08em] text-ice sm:max-w-[260px] sm:text-sm md:text-base">
+          Diseño, desarrollo web e inteligencia artificial para proyectos digitales.
+        </p>
+        <ContactButton />
+      </div>
+    </section>
+  );
 }
 
-function MarqueeSection() {
+function ProjectPreview({ project }: { project: Project }) {
+  const [failed, setFailed] = useState(false);
+
+  return (
+    <a
+      href={project.url}
+      target="_blank"
+      rel="noreferrer"
+      className="project-preview group relative h-[230px] w-[360px] shrink-0 overflow-hidden rounded-[28px] border border-white/15 bg-[#15151a] sm:h-[290px] sm:w-[470px]"
+      aria-label={`Abrir ${project.title}`}
+    >
+      {!failed ? (
+        <img
+          src={screenshotUrl(project.url)}
+          alt={`Captura del proyecto terminado ${project.title}`}
+          loading="lazy"
+          className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.025]"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <div className="flex h-full items-center justify-center bg-[radial-gradient(circle_at_top_left,#51205f,#11131b_66%)] px-8 text-center text-xl font-semibold text-white">
+          {project.title}
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 text-white">
+        <div>
+          <span className="text-[10px] uppercase tracking-[.25em] text-white/60">{project.platform}</span>
+          <h3 className="mt-1 text-xl font-bold sm:text-2xl">{project.title}</h3>
+        </div>
+        <ExternalLink className="shrink-0 transition group-hover:-translate-y-1 group-hover:translate-x-1" />
+      </div>
+    </a>
+  );
+}
+
+function PublishedProjectsCarousel() {
   const ref = useRef<HTMLElement>(null);
   const [offset, setOffset] = useState(0);
+  const repeated = useMemo(() => [...projects, ...projects, ...projects], []);
+
   useEffect(() => {
-    const onScroll = () => ref.current && setOffset((window.scrollY - ref.current.offsetTop + window.innerHeight) * 0.18);
+    const onScroll = () => {
+      if (!ref.current) return;
+      const rect = ref.current.getBoundingClientRect();
+      setOffset((window.innerHeight - rect.top) * 0.11);
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
-  const row = (items: readonly (typeof projectPreviews)[number][], right = true) => <div className="flex gap-4" style={{ transform: `translateX(${right ? offset - 240 : -(offset - 240)}px)` }}>
-    {[...items, ...items].map(([title,url,image], index) => <a key={`${title}-${index}`} href={url} target="_blank" rel="noreferrer" className="group relative h-[230px] w-[380px] shrink-0 overflow-hidden rounded-3xl border border-white/10 bg-white/5 sm:h-[280px] sm:w-[470px]">
-      <img src={image} alt={`Captura del proyecto ${title}`} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent px-5 pb-4 pt-14 text-lg font-semibold text-white">{title}</span>
-    </a>)}
-  </div>;
-  return <section ref={ref} className="overflow-hidden bg-ink py-20">
-    <div className="mb-8 px-5 text-center"><p className="text-sm uppercase tracking-[.3em] text-ice/60">Proyectos publicados</p><h2 className="hero-heading mt-2 text-[clamp(2.8rem,8vw,7rem)] font-black uppercase leading-none">GitHub y Render</h2></div>
-    <div className="flex flex-col gap-4">{row(projectPreviews.slice(0,4))}{row(projectPreviews.slice(4), false)}</div>
-  </section>;
+
+  return (
+    <section ref={ref} className="overflow-hidden bg-ink py-20 sm:py-28">
+      <div className="mx-auto mb-10 max-w-5xl px-5 text-center">
+        <p className="text-xs uppercase tracking-[.3em] text-ice/55">Muestras reales publicadas</p>
+        <h2 className="hero-heading mt-3 text-[clamp(2.8rem,8vw,7rem)] font-black uppercase leading-none">Proyectos en línea</h2>
+        <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-ice/65 sm:text-base">
+          Capturas automáticas de las versiones publicadas. Cada tarjeta abre el proyecto original en una pestaña nueva.
+        </p>
+      </div>
+
+      <div className="flex gap-4 pl-4 sm:gap-5" style={{ transform: `translate3d(${-260 + offset}px,0,0)`, willChange: 'transform' }}>
+        {repeated.map((project, index) => (
+          <ProjectPreview key={`${project.title}-${index}`} project={project} />
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function AboutSection() {
-  return <section id="about" className="flex min-h-[70vh] items-center justify-center bg-ink px-6 py-24"><div className="max-w-3xl text-center"><FadeIn><h2 className="hero-heading text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">Sobre mí</h2><p className="mx-auto mt-10 max-w-2xl text-[clamp(1rem,2vw,1.35rem)] leading-relaxed text-ice">Combino diseño, tecnología y narrativa visual para construir experiencias digitales memorables y funcionales.</p></FadeIn></div></section>;
+  return (
+    <section id="about" className="flex min-h-[65vh] items-center justify-center bg-ink px-6 py-24">
+      <div className="max-w-3xl text-center">
+        <FadeIn>
+          <h2 className="hero-heading text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">Sobre mí</h2>
+          <p className="mx-auto mt-10 max-w-2xl text-[clamp(1rem,2vw,1.35rem)] leading-relaxed text-ice">
+            Combino conocimiento de negocio, diseño, automatización e inteligencia artificial para convertir ideas en soluciones digitales claras y funcionales.
+          </p>
+        </FadeIn>
+      </div>
+    </section>
+  );
 }
 
 function ServicesSection() {
-  return <section id="servicios" className="rounded-t-[48px] bg-white px-5 py-24 text-ink md:px-10"><h2 className="mb-16 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">Servicios</h2><div className="mx-auto max-w-5xl">{services.map(([number,title,description]) => <div key={number} className="grid grid-cols-[.32fr_1fr] gap-5 border-t border-black/15 py-9 last:border-b"><span className="text-[clamp(3rem,8vw,7rem)] font-black leading-none">{number}</span><div><h3 className="text-[clamp(1.15rem,2.5vw,2rem)] font-semibold uppercase">{title}</h3><p className="mt-3 max-w-2xl text-base leading-relaxed opacity-60">{description}</p></div></div>)}</div></section>;
+  return (
+    <section id="servicios" className="rounded-t-[46px] bg-white px-5 py-24 text-ink md:px-10">
+      <h2 className="mb-16 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">Servicios</h2>
+      <div className="mx-auto max-w-5xl">
+        {services.map(([number, title, description]) => (
+          <div key={number} className="grid grid-cols-[.3fr_1fr] gap-5 border-t border-black/15 py-9 last:border-b">
+            <span className="text-[clamp(3rem,8vw,7rem)] font-black leading-none">{number}</span>
+            <div>
+              <h3 className="text-[clamp(1.1rem,2.5vw,2rem)] font-semibold uppercase">{title}</h3>
+              <p className="mt-3 max-w-2xl text-base leading-relaxed opacity-60">{description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function ProjectsSection() {
-  return <section id="proyectos" className="bg-ink px-5 py-24 md:px-10"><h2 className="hero-heading mb-12 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">Proyectos</h2><div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-2">{projectPreviews.map(([title,url,image]) => <a key={title} href={url} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-[36px] border border-white/15 bg-white/5"><img src={image} alt={`Captura de ${title}`} className="aspect-[16/9] w-full object-cover transition duration-500 group-hover:scale-105" /><div className="flex items-center justify-between p-6 text-ice"><h3 className="text-2xl font-bold uppercase">{title}</h3><ArrowUpRight /></div></a>)}</div></section>;
+  return (
+    <section id="proyectos" className="bg-ink px-5 py-24 md:px-10">
+      <h2 className="hero-heading mb-12 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">Selección</h2>
+      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
+        {projects.map((project) => (
+          <a key={project.title} href={project.url} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-[34px] border border-white/15 bg-white/[.04]">
+            <div className="aspect-[16/9] overflow-hidden bg-[#15151a]">
+              <img
+                src={screenshotUrl(project.url)}
+                alt={`Vista del proyecto ${project.title}`}
+                loading="lazy"
+                className="h-full w-full object-cover object-top transition duration-500 group-hover:scale-[1.025]"
+              />
+            </div>
+            <div className="flex items-start justify-between gap-5 p-6 text-ice">
+              <div>
+                <p className="text-[10px] uppercase tracking-[.24em] text-ice/50">{project.platform}</p>
+                <h3 className="mt-1 text-2xl font-bold uppercase">{project.title}</h3>
+                <p className="mt-3 max-w-xl text-sm leading-relaxed text-ice/60">{project.description}</p>
+              </div>
+              <ArrowUpRight className="mt-1 shrink-0 transition group-hover:-translate-y-1 group-hover:translate-x-1" />
+            </div>
+          </a>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 function ContactSection() {
-  return <section id="contacto" className="bg-ink px-6 py-24 text-center text-ice"><h2 className="hero-heading text-[clamp(3rem,9vw,8rem)] font-black uppercase">Hablemos</h2><p className="mx-auto mt-5 max-w-xl text-lg text-ice/70">Disponible para proyectos de diseño, desarrollo web y experiencias digitales.</p></section>;
+  return (
+    <section id="contacto" className="bg-ink px-6 py-28 text-center text-ice">
+      <h2 className="hero-heading text-[clamp(3rem,9vw,8rem)] font-black uppercase">Hablemos</h2>
+      <p className="mx-auto mt-5 max-w-xl text-lg text-ice/70">Disponible para proyectos de diseño, desarrollo web, automatización e inteligencia artificial.</p>
+    </section>
+  );
 }
 
 export default function App() {
-  return <main className="overflow-x-clip bg-ink font-sans"><HeroSection /><MarqueeSection /><AboutSection /><ServicesSection /><ProjectsSection /><ContactSection /></main>;
+  return (
+    <main className="overflow-x-clip bg-ink font-sans">
+      <HeroSection />
+      <PublishedProjectsCarousel />
+      <AboutSection />
+      <ServicesSection />
+      <ProjectsSection />
+      <ContactSection />
+    </main>
+  );
 }
