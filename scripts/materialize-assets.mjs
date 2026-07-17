@@ -6,6 +6,8 @@ const root = process.cwd();
 const publicDir = path.join(root, 'public');
 const projectsDir = path.join(publicDir, 'projects');
 
+const CYBORG_OUTPUT_NAME = 'cyborg-daniel-v4.webp';
+const CYBORG_PUBLIC_URL = `/${CYBORG_OUTPUT_NAME}?v=4`;
 const CYBORG_EXPECTED_SIZE = 128486;
 const CYBORG_EXPECTED_SHA256 =
   'f8e0873eecb30766439de805f2462e7eab003b2a3c1945f7e62e1b31e5a39df4';
@@ -67,11 +69,27 @@ async function materializeCyborg() {
     );
   }
 
-  const outputPath = path.join(publicDir, 'cyborg-daniel.webp');
+  const outputPath = path.join(publicDir, CYBORG_OUTPUT_NAME);
   await fs.writeFile(outputPath, image);
   console.log(
     `Ciborg actualizado generado: ${outputPath} (${image.length} bytes, SHA-256 ${sha256})`,
   );
+}
+
+async function updateCyborgReference() {
+  const appPath = path.join(root, 'src', 'App.tsx');
+  const source = await fs.readFile(appPath, 'utf8');
+  const updated = source.replace(
+    /\/cyborg-daniel(?:-v4)?\.webp\?v=\d+/g,
+    CYBORG_PUBLIC_URL,
+  );
+
+  if (updated === source && !source.includes(CYBORG_PUBLIC_URL)) {
+    throw new Error('No se encontró la referencia del ciborg dentro de src/App.tsx.');
+  }
+
+  await fs.writeFile(appPath, updated);
+  console.log(`Referencia del hero actualizada: ${CYBORG_PUBLIC_URL}`);
 }
 
 async function fetchWithTimeout(url, timeoutMs = 70000) {
@@ -136,6 +154,7 @@ async function captureProject(project) {
 async function main() {
   await ensureDirectories();
   await materializeCyborg();
+  await updateCyborgReference();
 
   for (const project of projects) {
     try {
