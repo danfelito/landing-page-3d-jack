@@ -1,14 +1,15 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpRight, ExternalLink, ImageOff, Mail, MessageCircle } from 'lucide-react';
+import { ArrowUpRight, ExternalLink, Mail, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import cyborgFallback from './assets/robot-data';
 
 type Project = {
   slug: string;
   title: string;
-  url: string;
+  url?: string;
   platform: string;
   description: string;
+  images: string[];
 };
 
 const whatsappUrl =
@@ -18,32 +19,59 @@ const emailUrl =
 
 const projects: Project[] = [
   {
+    slug: 'aloia',
+    title: 'Aloia · Asistente IA',
+    url: 'https://aloia.space-z.ai/',
+    platform: 'Z.AI',
+    description: 'Asistente inteligente para la gestión y filtrado de llamadas.',
+    images: ['/projects/aloia.webp?v=6'],
+  },
+  {
     slug: 'firma-de-comisiones',
     title: 'Firma de Comisiones',
     url: 'https://firma-de-comisiones-1.onrender.com/',
     platform: 'Render',
-    description: 'Aplicación publicada para gestión y firma de acuerdos de comisión.',
+    description: 'Flujo digital para revisar, completar y firmar acuerdos de comisión.',
+    images: ['/projects/firma-principal.webp?v=6', '/projects/firma-alt.webp?v=6'],
   },
   {
-    slug: 'harbest-landing',
-    title: 'Harbest Landing',
-    url: 'https://harbestlanding.danfelavicas.workers.dev/#inicio',
-    platform: 'Cloudflare',
-    description: 'Landing comercial publicada para una propuesta del sector agro y tecnología.',
+    slug: 'circulo-inmobiliario',
+    title: 'Círculo Inmobiliario',
+    url: 'https://circulo-inmobiliario.onrender.com/',
+    platform: 'Render',
+    description: 'Asesoría inmobiliaria guiada para compra y renta de propiedades.',
+    images: ['/projects/circulo-inmobiliario.webp?v=6'],
   },
   {
-    slug: 'proyecto-zai-01',
-    title: 'Proyecto Z.AI 01',
-    url: 'https://chat.z.ai/c/0bf041c1-2ed3-4ec1-9ce7-0ec63e14e6aa',
+    slug: 'valupro',
+    title: 'ValuPro',
+    url: 'https://j1nke5shgru1.deploy.space.z.ai/',
     platform: 'Z.AI',
-    description: 'Proyecto desarrollado y compartido mediante una publicación de Z.AI.',
+    description: 'Cotizador profesional de avalúos con seguimiento de clientes y folios.',
+    images: ['/projects/valupro.webp?v=6'],
   },
   {
-    slug: 'proyecto-zai-02',
-    title: 'Proyecto Z.AI 02',
-    url: 'https://chat.z.ai/c/cb0eafde-199d-4182-bcdc-0f5fc0ac4a90',
+    slug: 'vivero-utica',
+    title: 'Vivero Útica',
+    url: 'https://ornamentalesutica.space-z.ai/',
     platform: 'Z.AI',
-    description: 'Segunda muestra de proyecto publicado y compartido mediante Z.AI.',
+    description: 'Dashboard financiero y operativo para un vivero ornamental.',
+    images: ['/projects/vivero-utica.webp?v=6'],
+  },
+  {
+    slug: 'new-holland',
+    title: 'New Holland',
+    url: 'https://spessotonewholland.space-z.ai/',
+    platform: 'Z.AI',
+    description: 'Catálogo digital de calzado de seguridad para la industria mexicana.',
+    images: ['/projects/new-holland.webp?v=6'],
+  },
+  {
+    slug: 'deantro',
+    title: 'DeAntro',
+    platform: 'App Android',
+    description: 'Aplicación móvil para encuentros cercanos mediante ubicación y Bluetooth.',
+    images: ['/projects/deantro-01.webp?v=6', '/projects/deantro-02.webp?v=6'],
   },
 ];
 
@@ -54,22 +82,6 @@ const services = [
   ['04', 'Identidad visual', 'Sistemas visuales coherentes para comunicar una presencia clara y memorable.'],
   ['05', 'Prototipos digitales', 'Conceptos funcionales que permiten validar ideas antes de escalar su desarrollo.'],
 ];
-
-function remoteScreenshotUrl(url: string) {
-  const params = new URLSearchParams({
-    url: url.replace('#inicio', ''),
-    screenshot: 'true',
-    waitUntil: 'networkidle2',
-    waitForTimeout: '9000',
-    prerender: 'true',
-    force: 'true',
-    retry: '2',
-    timeout: '60000',
-    embed: 'screenshot.url',
-  });
-
-  return `https://api.microlink.io/?${params.toString()}`;
-}
 
 function FadeIn({ children, delay = 0, y = 24, className = '' }: { children: ReactNode; delay?: number; y?: number; className?: string }) {
   return (
@@ -100,7 +112,7 @@ function ContactButton() {
 }
 
 function HeroCyborg() {
-  const [src, setSrc] = useState('/cyborg-daniel.webp?v=3');
+  const [src, setSrc] = useState('/cyborg-daniel-v4.webp?v=4');
   const [usingFallback, setUsingFallback] = useState(false);
 
   return (
@@ -171,59 +183,43 @@ function HeroSection() {
 }
 
 function ProjectVisual({ project, compact = false }: { project: Project; compact?: boolean }) {
-  const localImage = `/projects/${project.slug}.jpg?v=3`;
-  const remoteImage = useMemo(() => remoteScreenshotUrl(project.url), [project.url]);
-  const [src, setSrc] = useState(localImage);
-  const [stage, setStage] = useState<'local' | 'remote' | 'failed'>('local');
-  const [loaded, setLoaded] = useState(false);
+  const [imageIndex, setImageIndex] = useState(0);
+  const imageKey = project.images.join('|');
 
   useEffect(() => {
-    setSrc(localImage);
-    setStage('local');
-    setLoaded(false);
-  }, [localImage]);
+    setImageIndex(0);
+    if (project.images.length < 2) return undefined;
 
-  const tryNextSource = () => {
-    setLoaded(false);
-    if (stage === 'local') {
-      setStage('remote');
-      setSrc(remoteImage);
-    } else {
-      setStage('failed');
-    }
-  };
+    const timer = window.setInterval(() => {
+      setImageIndex((index) => (index + 1) % project.images.length);
+    }, compact ? 3800 : 4600);
+
+    return () => window.clearInterval(timer);
+  }, [compact, imageKey, project.images.length]);
 
   return (
     <div className="project-visual relative h-full w-full overflow-hidden bg-[#15151a]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(182,0,168,.34),transparent_34%),radial-gradient(circle_at_82%_20%,rgba(45,211,255,.28),transparent_30%),linear-gradient(135deg,#15151a,#090a0e)]" />
-
-      {stage !== 'failed' && (
+      {project.images.map((src, index) => (
         <img
           key={src}
           src={src}
-          alt={`Captura del proyecto terminado ${project.title}`}
+          alt={`Vista del proyecto ${project.title} ${index + 1}`}
           loading={compact ? 'eager' : 'lazy'}
-          referrerPolicy="no-referrer"
-          className={`absolute inset-0 h-full w-full object-cover object-top transition duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
-          onLoad={(event) => {
-            const image = event.currentTarget;
-            if (image.naturalWidth < 500 || image.naturalHeight < 280) {
-              tryNextSource();
-              return;
-            }
-            setLoaded(true);
-          }}
-          onError={tryNextSource}
+          decoding="async"
+          className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-700 ${
+            index === imageIndex ? 'opacity-100' : 'opacity-0'
+          }`}
         />
-      )}
+      ))}
 
-      {!loaded && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center text-white/80">
-          <ImageOff size={30} className="opacity-65" />
-          <span className="text-sm uppercase tracking-[.2em] text-white/55">
-            {stage === 'failed' ? 'Vista no disponible' : 'Preparando vista completa'}
-          </span>
-          <strong className="text-xl text-white">{project.title}</strong>
+      {project.images.length > 1 && (
+        <div className="absolute bottom-4 right-4 z-10 flex gap-1.5" aria-label={`Vista ${imageIndex + 1} de ${project.images.length}`}>
+          {project.images.map((src, index) => (
+            <span
+              key={src}
+              className={`h-1.5 rounded-full transition-all ${index === imageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/45'}`}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -231,14 +227,10 @@ function ProjectVisual({ project, compact = false }: { project: Project; compact
 }
 
 function ProjectPreview({ project }: { project: Project }) {
-  return (
-    <a
-      href={project.url}
-      target="_blank"
-      rel="noreferrer"
-      className="project-preview group relative h-[230px] w-[360px] shrink-0 overflow-hidden rounded-[28px] border border-white/15 bg-[#15151a] sm:h-[290px] sm:w-[470px]"
-      aria-label={`Abrir ${project.title}`}
-    >
+  const className =
+    'project-preview group relative h-[230px] w-[360px] shrink-0 overflow-hidden rounded-[28px] border border-white/15 bg-[#15151a] sm:h-[290px] sm:w-[470px]';
+  const content = (
+    <>
       <ProjectVisual project={project} compact />
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 text-white">
@@ -246,8 +238,18 @@ function ProjectPreview({ project }: { project: Project }) {
           <span className="text-[10px] uppercase tracking-[.25em] text-white/60">{project.platform}</span>
           <h3 className="mt-1 text-xl font-bold sm:text-2xl">{project.title}</h3>
         </div>
-        <ExternalLink className="shrink-0 transition group-hover:-translate-y-1 group-hover:translate-x-1" />
+        {project.url && <ExternalLink className="shrink-0 transition group-hover:-translate-y-1 group-hover:translate-x-1" />}
       </div>
+    </>
+  );
+
+  if (!project.url) {
+    return <article className={className}>{content}</article>;
+  }
+
+  return (
+    <a href={project.url} target="_blank" rel="noreferrer" className={className} aria-label={`Abrir ${project.title}`}>
+      {content}
     </a>
   );
 }
@@ -274,13 +276,13 @@ function PublishedProjectsCarousel() {
         <p className="text-xs uppercase tracking-[.3em] text-ice/55">Muestras reales publicadas</p>
         <h2 className="hero-heading mt-3 text-[clamp(2.8rem,8vw,7rem)] font-black uppercase leading-none">Proyectos en línea</h2>
         <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-ice/65 sm:text-base">
-          Capturas generadas después de que cada portal termina de cargar. Cada tarjeta abre el proyecto original.
+          Capturas reales de cada proyecto, ordenadas por portafolio. Los proyectos con más de una vista cambian automáticamente.
         </p>
       </div>
 
       <div className="flex gap-4 pl-4 sm:gap-5" style={{ transform: `translate3d(${-260 + offset}px,0,0)`, willChange: 'transform' }}>
         {repeated.map((project, index) => (
-          <ProjectPreview key={`${project.title}-${index}`} project={project} />
+          <ProjectPreview key={`${project.slug}-${index}`} project={project} />
         ))}
       </div>
     </section>
@@ -321,25 +323,42 @@ function ServicesSection() {
   );
 }
 
+function ProjectCard({ project }: { project: Project }) {
+  const className = 'group overflow-hidden rounded-[34px] border border-white/15 bg-white/[.04]';
+  const content = (
+    <>
+      <div className="aspect-[16/9] overflow-hidden bg-[#15151a]">
+        <ProjectVisual project={project} />
+      </div>
+      <div className="flex items-start justify-between gap-5 p-6 text-ice">
+        <div>
+          <p className="text-[10px] uppercase tracking-[.24em] text-ice/50">{project.platform}</p>
+          <h3 className="mt-1 text-2xl font-bold uppercase">{project.title}</h3>
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-ice/60">{project.description}</p>
+        </div>
+        {project.url && <ArrowUpRight className="mt-1 shrink-0 transition group-hover:-translate-y-1 group-hover:translate-x-1" />}
+      </div>
+    </>
+  );
+
+  if (!project.url) {
+    return <article className={className}>{content}</article>;
+  }
+
+  return (
+    <a href={project.url} target="_blank" rel="noreferrer" className={className}>
+      {content}
+    </a>
+  );
+}
+
 function ProjectsSection() {
   return (
     <section id="proyectos" className="bg-ink px-5 py-24 md:px-10">
       <h2 className="hero-heading mb-12 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">Selección</h2>
       <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
         {projects.map((project) => (
-          <a key={project.title} href={project.url} target="_blank" rel="noreferrer" className="group overflow-hidden rounded-[34px] border border-white/15 bg-white/[.04]">
-            <div className="aspect-[16/9] overflow-hidden bg-[#15151a]">
-              <ProjectVisual project={project} />
-            </div>
-            <div className="flex items-start justify-between gap-5 p-6 text-ice">
-              <div>
-                <p className="text-[10px] uppercase tracking-[.24em] text-ice/50">{project.platform}</p>
-                <h3 className="mt-1 text-2xl font-bold uppercase">{project.title}</h3>
-                <p className="mt-3 max-w-xl text-sm leading-relaxed text-ice/60">{project.description}</p>
-              </div>
-              <ArrowUpRight className="mt-1 shrink-0 transition group-hover:-translate-y-1 group-hover:translate-x-1" />
-            </div>
-          </a>
+          <ProjectCard key={project.slug} project={project} />
         ))}
       </div>
     </section>
