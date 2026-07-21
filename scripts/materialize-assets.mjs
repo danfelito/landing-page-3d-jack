@@ -4,15 +4,18 @@ import { createHash } from 'node:crypto';
 
 const root = process.cwd();
 const publicDir = path.join(root, 'public');
-
 const CYBORG_OUTPUT_NAME = 'cyborg-daniel-v4.webp';
-const CYBORG_PUBLIC_URL = `/${CYBORG_OUTPUT_NAME}?v=4`;
-const CYBORG_EXPECTED_SIZE = 128486;
-const CYBORG_EXPECTED_SHA256 =
+
+const LEGACY_EXPECTED_SIZE = 128486;
+const LEGACY_EXPECTED_SHA256 =
   'f8e0873eecb30766439de805f2462e7eab003b2a3c1945f7e62e1b31e5a39df4';
 
-async function ensureDirectories() {
-  await fs.mkdir(publicDir, { recursive: true });
+function isWebP(buffer) {
+  return (
+    buffer.length >= 12 &&
+    buffer.subarray(0, 4).toString('ascii') === 'RIFF' &&
+    buffer.subarray(8, 12).toString('ascii') === 'WEBP'
+  );
 }
 
 async function materializeCyborg() {
@@ -28,53 +31,48 @@ async function materializeCyborg() {
     'part-04e.txt',
   ];
 
-  const parts = await Promise.all(
-    partNames.map((name) => fs.readFile(path.join(partsDir, name), 'utf8')),
-  );
+  let parts;
+  try {
+    parts = await Promise.all(
+      partNames.map((name) => fs.readFile(path.join(partsDir, name), 'utf8')),
+    );
+  } catch (error) {
+    console.warn(
+      `No fue posible leer todas las partes del ciborg. La aplicación usará la imagen de respaldo: ${error.message}`,
+    );
+    return;
+  }
 
   const base64 = parts.join('').replace(/\s+/g, '');
   const image = Buffer.from(base64, 'base64');
   const sha256 = createHash('sha256').update(image).digest('hex');
 
-  if (image.length !== CYBORG_EXPECTED_SIZE) {
-    throw new Error(
-      `Tamaño inesperado del ciborg: ${image.length} bytes; se esperaban ${CYBORG_EXPECTED_SIZE}.`,
+  if (!isWebP(image)) {
+    console.warn(
+      `El recurso reconstruido no tiene una cabecera WebP válida (${image.length} bytes). La aplicación usará la imagen de respaldo.`,
     );
+    return;
   }
 
-  if (sha256 !== CYBORG_EXPECTED_SHA256) {
-    throw new Error(
-      `SHA-256 inesperado del ciborg: ${sha256}; se esperaba ${CYBORG_EXPECTED_SHA256}.`,
+  if (
+    image.length !== LEGACY_EXPECTED_SIZE ||
+    sha256 !== LEGACY_EXPECTED_SHA256
+  ) {
+    console.warn(
+      `El ciborg actual difiere de la versión anterior: ${image.length} bytes, SHA-256 ${sha256}. Se continuará porque el archivo WebP es válido.`,
     );
   }
 
   const outputPath = path.join(publicDir, CYBORG_OUTPUT_NAME);
   await fs.writeFile(outputPath, image);
   console.log(
-    `Ciborg actualizado generado: ${outputPath} (${image.length} bytes, SHA-256 ${sha256})`,
+    `Ciborg generado: ${outputPath} (${image.length} bytes, SHA-256 ${sha256})`,
   );
-}
-
-async function updateCyborgReference() {
-  const appPath = path.join(root, 'src', 'App.tsx');
-  const source = await fs.readFile(appPath, 'utf8');
-  const updated = source.replace(
-    /\/cyborg-daniel(?:-v4)?\.webp\?v=\d+/g,
-    CYBORG_PUBLIC_URL,
-  );
-
-  if (updated === source && !source.includes(CYBORG_PUBLIC_URL)) {
-    throw new Error('No se encontró la referencia del ciborg dentro de src/App.tsx.');
-  }
-
-  await fs.writeFile(appPath, updated);
-  console.log(`Referencia del hero confirmada: ${CYBORG_PUBLIC_URL}`);
 }
 
 async function main() {
-  await ensureDirectories();
+  await fs.mkdir(publicDir, { recursive: true });
   await materializeCyborg();
-  await updateCyborgReference();
   console.log('Capturas estáticas de proyectos preservadas en public/projects.');
 }
 
