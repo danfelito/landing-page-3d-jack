@@ -1,7 +1,6 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, ExternalLink, Mail, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
-import cyborgFallback from './assets/robot-data';
 
 type Project = {
   slug: string;
@@ -11,6 +10,9 @@ type Project = {
   description: string;
   images: string[];
 };
+
+const ORIGINAL_HERO_IMAGE =
+  'https://shrug-person-78902957.figma.site/_components/v2/d24c01ad3a56fc65e942a1f501eb73db42d7cf9a/Rectangle_40443.81459862.png';
 
 const whatsappUrl =
   'https://wa.me/522294648962?text=Hola%20Daniel%2C%20vi%20tu%20portafolio%20y%20quiero%20hablar%20sobre%20un%20proyecto.';
@@ -111,30 +113,18 @@ function ContactButton() {
   );
 }
 
-function HeroCyborg() {
-  const [src, setSrc] = useState('/cyborg-daniel-v4.webp?v=4');
-  const [usingFallback, setUsingFallback] = useState(false);
-
+function HeroPortrait() {
   return (
     <img
-      src={src}
-      alt="Ciborg de Daniel"
+      src={ORIGINAL_HERO_IMAGE}
+      alt="Retrato original del portafolio de Daniel"
+      width={916}
+      height={1000}
       loading="eager"
       fetchPriority="high"
-      decoding="sync"
-      className="hero-cyborg visible block h-auto max-h-[67vh] w-auto max-w-full object-contain opacity-100 sm:max-h-[72vh] lg:max-h-[78vh]"
-      onLoad={(event) => {
-        if (event.currentTarget.naturalWidth < 300 && !usingFallback) {
-          setUsingFallback(true);
-          setSrc(cyborgFallback);
-        }
-      }}
-      onError={() => {
-        if (!usingFallback) {
-          setUsingFallback(true);
-          setSrc(cyborgFallback);
-        }
-      }}
+      decoding="async"
+      referrerPolicy="no-referrer"
+      className="hero-portrait visible block h-auto max-h-[66vh] w-auto max-w-full object-contain opacity-100 drop-shadow-[0_28px_44px_rgba(0,0,0,.38)] sm:max-h-[72vh] lg:max-h-[78vh]"
     />
   );
 }
@@ -168,8 +158,8 @@ function HeroSection() {
         </FadeIn>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-[102px] z-[15] mx-auto flex w-[min(94vw,680px)] justify-center opacity-100 sm:bottom-[58px] sm:w-[min(78vw,720px)] md:w-[min(60vw,760px)] lg:bottom-[32px] lg:w-[min(48vw,790px)]">
-        <HeroCyborg />
+      <div className="pointer-events-none absolute inset-x-0 bottom-[88px] z-[15] mx-auto flex w-[min(88vw,610px)] justify-center sm:bottom-[50px] sm:w-[min(70vw,650px)] md:w-[min(54vw,690px)] lg:bottom-[22px] lg:w-[min(42vw,720px)]">
+        <HeroPortrait />
       </div>
 
       <div className="absolute inset-x-0 bottom-0 z-30 mx-auto flex max-w-[1600px] items-end justify-between gap-3 px-5 pb-5 sm:px-8 sm:pb-8 md:px-10">
