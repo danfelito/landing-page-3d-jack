@@ -67,6 +67,15 @@ const projects: Project[] = [
     images: ['/projects/circulo-inmobiliario.webp?v=6'],
   },
   {
+    slug: 'circulo-bienes-raices',
+    title: 'Círculo Bienes Raíces',
+    url: 'https://circulo-bienes-raices-1.onrender.com/',
+    platform: 'Render',
+    description: 'Portal inmobiliario para explorar propiedades, servicios y oportunidades de inversión.',
+    images: ['/projects/circulo-bienes-raices.webp?v=1'],
+    imagePosition: 'top',
+  },
+  {
     slug: 'valupro',
     title: 'ValuPro',
     url: 'https://j1nke5shgru1.deploy.space.z.ai/',
