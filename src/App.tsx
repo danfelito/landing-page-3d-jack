@@ -9,6 +9,8 @@ type Project = {
   platform: string;
   description: string;
   images: string[];
+  imageMode?: 'cover' | 'contain';
+  imagePosition?: 'top' | 'center';
 };
 
 const ORIGINAL_HERO_IMAGE =
@@ -26,7 +28,27 @@ const projects: Project[] = [
     url: 'https://aloia.space-z.ai/',
     platform: 'Z.AI',
     description: 'Asistente inteligente para la gestión y filtrado de llamadas.',
-    images: ['/projects/aloia.webp?v=6'],
+    images: ['/projects/aloia.webp?v=8'],
+    imageMode: 'contain',
+    imagePosition: 'center',
+  },
+  {
+    slug: 'transcripcion-pdf',
+    title: 'Transcripción a PDF',
+    url: 'https://chat.z.ai/space/r115468vw860-art',
+    platform: 'Z.AI',
+    description: 'Herramienta para limpiar transcripciones de YouTube y generar documentos PDF profesionales.',
+    images: ['/projects/transcripcion-pdf.webp?v=8'],
+    imagePosition: 'top',
+  },
+  {
+    slug: 'harbest',
+    title: 'HarBest · Catálogo agrícola',
+    url: 'https://harbestlanding.danfelavicas.workers.dev/#inicio',
+    platform: 'Cloudflare Workers',
+    description: 'Landing y catálogo de bioinsumos con consulta técnica y contacto comercial.',
+    images: ['/projects/harbest.webp?v=8'],
+    imagePosition: 'top',
   },
   {
     slug: 'firma-de-comisiones',
@@ -85,7 +107,17 @@ const services = [
   ['05', 'Prototipos digitales', 'Conceptos funcionales que permiten validar ideas antes de escalar su desarrollo.'],
 ];
 
-function FadeIn({ children, delay = 0, y = 24, className = '' }: { children: ReactNode; delay?: number; y?: number; className?: string }) {
+function FadeIn({
+  children,
+  delay = 0,
+  y = 24,
+  className = '',
+}: {
+  children: ReactNode;
+  delay?: number;
+  y?: number;
+  className?: string;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y }}
@@ -187,8 +219,11 @@ function ProjectVisual({ project, compact = false }: { project: Project; compact
     return () => window.clearInterval(timer);
   }, [compact, imageKey, project.images.length]);
 
+  const fitClass = project.imageMode === 'contain' ? 'object-contain' : 'object-cover';
+  const positionClass = project.imagePosition === 'center' ? 'object-center' : 'object-top';
+
   return (
-    <div className="project-visual relative h-full w-full overflow-hidden bg-[#15151a]">
+    <div className="project-visual relative h-full w-full overflow-hidden bg-[#101216]">
       {project.images.map((src, index) => (
         <img
           key={src}
@@ -196,18 +231,23 @@ function ProjectVisual({ project, compact = false }: { project: Project; compact
           alt={`Vista del proyecto ${project.title} ${index + 1}`}
           loading={compact ? 'eager' : 'lazy'}
           decoding="async"
-          className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-700 ${
+          className={`absolute inset-0 h-full w-full ${fitClass} ${positionClass} transition-opacity duration-700 ${
             index === imageIndex ? 'opacity-100' : 'opacity-0'
           }`}
         />
       ))}
 
       {project.images.length > 1 && (
-        <div className="absolute bottom-4 right-4 z-10 flex gap-1.5" aria-label={`Vista ${imageIndex + 1} de ${project.images.length}`}>
+        <div
+          className="absolute bottom-4 right-4 z-10 flex gap-1.5"
+          aria-label={`Vista ${imageIndex + 1} de ${project.images.length}`}
+        >
           {project.images.map((src, index) => (
             <span
               key={src}
-              className={`h-1.5 rounded-full transition-all ${index === imageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/45'}`}
+              className={`h-1.5 rounded-full transition-all ${
+                index === imageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/45'
+              }`}
             />
           ))}
         </div>
@@ -228,7 +268,9 @@ function ProjectPreview({ project }: { project: Project }) {
           <span className="text-[10px] uppercase tracking-[.25em] text-white/60">{project.platform}</span>
           <h3 className="mt-1 text-xl font-bold sm:text-2xl">{project.title}</h3>
         </div>
-        {project.url && <ExternalLink className="shrink-0 transition group-hover:-translate-y-1 group-hover:translate-x-1" />}
+        {project.url && (
+          <ExternalLink className="shrink-0 transition group-hover:-translate-y-1 group-hover:translate-x-1" />
+        )}
       </div>
     </>
   );
@@ -238,7 +280,13 @@ function ProjectPreview({ project }: { project: Project }) {
   }
 
   return (
-    <a href={project.url} target="_blank" rel="noreferrer" className={className} aria-label={`Abrir ${project.title}`}>
+    <a
+      href={project.url}
+      target="_blank"
+      rel="noreferrer"
+      className={className}
+      aria-label={`Abrir ${project.title}`}
+    >
       {content}
     </a>
   );
@@ -264,13 +312,18 @@ function PublishedProjectsCarousel() {
     <section ref={ref} className="overflow-hidden bg-ink py-20 sm:py-28">
       <div className="mx-auto mb-10 max-w-5xl px-5 text-center">
         <p className="text-xs uppercase tracking-[.3em] text-ice/55">Muestras reales publicadas</p>
-        <h2 className="hero-heading mt-3 text-[clamp(2.8rem,8vw,7rem)] font-black uppercase leading-none">Proyectos en línea</h2>
+        <h2 className="hero-heading mt-3 text-[clamp(2.8rem,8vw,7rem)] font-black uppercase leading-none">
+          Proyectos en línea
+        </h2>
         <p className="mx-auto mt-5 max-w-2xl text-sm leading-relaxed text-ice/65 sm:text-base">
           Capturas reales de cada proyecto, ordenadas por portafolio. Los proyectos con más de una vista cambian automáticamente.
         </p>
       </div>
 
-      <div className="flex gap-4 pl-4 sm:gap-5" style={{ transform: `translate3d(${-260 + offset}px,0,0)`, willChange: 'transform' }}>
+      <div
+        className="flex gap-4 pl-4 sm:gap-5"
+        style={{ transform: `translate3d(${-260 + offset}px,0,0)`, willChange: 'transform' }}
+      >
         {repeated.map((project, index) => (
           <ProjectPreview key={`${project.slug}-${index}`} project={project} />
         ))}
@@ -284,7 +337,9 @@ function AboutSection() {
     <section id="about" className="flex min-h-[65vh] items-center justify-center bg-ink px-6 py-24">
       <div className="max-w-3xl text-center">
         <FadeIn>
-          <h2 className="hero-heading text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">Sobre mí</h2>
+          <h2 className="hero-heading text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">
+            Sobre mí
+          </h2>
           <p className="mx-auto mt-10 max-w-2xl text-[clamp(1rem,2vw,1.35rem)] leading-relaxed text-ice">
             Combino conocimiento de negocio, diseño, automatización e inteligencia artificial para convertir ideas en soluciones digitales claras y funcionales.
           </p>
@@ -297,7 +352,9 @@ function AboutSection() {
 function ServicesSection() {
   return (
     <section id="servicios" className="rounded-t-[46px] bg-white px-5 py-24 text-ink md:px-10">
-      <h2 className="mb-16 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">Servicios</h2>
+      <h2 className="mb-16 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">
+        Servicios
+      </h2>
       <div className="mx-auto max-w-5xl">
         {services.map(([number, title, description]) => (
           <div key={number} className="grid grid-cols-[.3fr_1fr] gap-5 border-t border-black/15 py-9 last:border-b">
@@ -326,7 +383,9 @@ function ProjectCard({ project }: { project: Project }) {
           <h3 className="mt-1 text-2xl font-bold uppercase">{project.title}</h3>
           <p className="mt-3 max-w-xl text-sm leading-relaxed text-ice/60">{project.description}</p>
         </div>
-        {project.url && <ArrowUpRight className="mt-1 shrink-0 transition group-hover:-translate-y-1 group-hover:translate-x-1" />}
+        {project.url && (
+          <ArrowUpRight className="mt-1 shrink-0 transition group-hover:-translate-y-1 group-hover:translate-x-1" />
+        )}
       </div>
     </>
   );
@@ -345,7 +404,9 @@ function ProjectCard({ project }: { project: Project }) {
 function ProjectsSection() {
   return (
     <section id="proyectos" className="bg-ink px-5 py-24 md:px-10">
-      <h2 className="hero-heading mb-12 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">Selección</h2>
+      <h2 className="hero-heading mb-12 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">
+        Selección
+      </h2>
       <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
         {projects.map((project) => (
           <ProjectCard key={project.slug} project={project} />
@@ -363,10 +424,18 @@ function ContactSection() {
         Disponible para proyectos de diseño, desarrollo web, automatización e inteligencia artificial.
       </p>
       <div className="mt-9 flex flex-wrap justify-center gap-4">
-        <a href={whatsappUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 transition hover:bg-white/10">
+        <a
+          href={whatsappUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 transition hover:bg-white/10"
+        >
           <MessageCircle size={19} /> WhatsApp
         </a>
-        <a href={emailUrl} className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 transition hover:bg-white/10">
+        <a
+          href={emailUrl}
+          className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 transition hover:bg-white/10"
+        >
           <Mail size={19} /> danfelavicas@gmail.com
         </a>
       </div>
