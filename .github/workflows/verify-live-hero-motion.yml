@@ -1,0 +1,89 @@
+name: Verify live hero motion
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-motion:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Verify deployed pointer motion
+        run: |
+          cat > verify-motion.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs/promises';
+
+          await fs.mkdir('hero-motion-verification', { recursive: true });
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({
+            viewport: { width: 1440, height: 900 },
+            deviceScaleFactor: 1,
+            hasTouch: false,
+          });
+
+          let verified = false;
+          let finalTransform = '';
+
+          for (let attempt = 1; attempt <= 40; attempt += 1) {
+            await page.goto(`https://landing-page-3d-jack.onrender.com/?hero-motion-check=${attempt}`, {
+              waitUntil: 'domcontentloaded',
+              timeout: 120000,
+            });
+            await page.waitForSelector('.hero-portrait', { state: 'visible', timeout: 120000 });
+            await page.waitForTimeout(1500);
+
+            const heroBox = await page.locator('.hero-portrait').locator('xpath=ancestor::section[1]').boundingBox();
+            if (!heroBox) throw new Error('Hero section not found');
+
+            await page.mouse.move(heroBox.x + heroBox.width * 0.5, heroBox.y + heroBox.height * 0.5);
+            await page.waitForTimeout(250);
+            await page.mouse.move(heroBox.x + heroBox.width * 0.84, heroBox.y + heroBox.height * 0.32, { steps: 12 });
+            await page.waitForTimeout(1200);
+
+            finalTransform = await page.locator('.hero-portrait').evaluate((element) => element.style.transform);
+            console.log(`Attempt ${attempt}: ${finalTransform}`);
+
+            const hasTranslation = /translate3d\((?!0\.00px, 0\.00px)/.test(finalTransform);
+            const hasRotation = finalTransform.includes('rotateX(') && finalTransform.includes('rotateY(');
+
+            if (hasTranslation && hasRotation) {
+              verified = true;
+              break;
+            }
+
+            await page.waitForTimeout(15000);
+          }
+
+          if (!verified) {
+            throw new Error(`Hero motion was not detected. Last transform: ${finalTransform}`);
+          }
+
+          await page.screenshot({ path: 'hero-motion-verification/hero-motion-live.png', fullPage: false });
+          await browser.close();
+          EOF
+          node verify-motion.mjs
+
+      - name: Upload verification screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: hero-motion-live
+          path: hero-motion-verification/hero-motion-live.png
+          if-no-files-found: error
