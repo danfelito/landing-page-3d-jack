@@ -1,0 +1,81 @@
+name: Capture project screenshots
+
+on:
+  push:
+    branches: [capture-new-projects]
+    paths:
+      - .github/workflows/capture-projects.yml
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install browser tools
+        run: |
+          npm install --no-save playwright sharp
+          npx playwright install --with-deps chromium
+
+      - name: Capture loaded project views
+        run: |
+          cat > capture.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import sharp from 'sharp';
+          import fs from 'node:fs/promises';
+
+          const projects = [
+            { name: 'aloia', url: 'https://aloia.space-z.ai/', wait: 18000 },
+            { name: 'transcripcion-pdf', url: 'https://chat.z.ai/space/r115468vw860-art', wait: 18000 },
+            { name: 'harbest', url: 'https://harbestlanding.danfelavicas.workers.dev/#inicio', wait: 12000 },
+          ];
+
+          await fs.mkdir('captured-projects', { recursive: true });
+          const browser = await chromium.launch({ headless: true });
+          const context = await browser.newContext({
+            viewport: { width: 1440, height: 900 },
+            deviceScaleFactor: 1,
+            locale: 'es-MX',
+            colorScheme: 'dark',
+          });
+
+          for (const project of projects) {
+            const page = await context.newPage();
+            page.setDefaultTimeout(120000);
+            await page.goto(project.url, { waitUntil: 'domcontentloaded', timeout: 120000 });
+            await page.waitForTimeout(project.wait);
+            await page.evaluate(() => window.scrollTo(0, 0));
+            await page.waitForTimeout(1500);
+            const png = `captured-projects/${project.name}.png`;
+            const webp = `captured-projects/${project.name}.webp`;
+            await page.screenshot({ path: png, fullPage: false });
+            await sharp(png).webp({ quality: 88 }).toFile(webp);
+            console.log(`${project.name}: ${await page.title()} -> ${page.url()}`);
+            await page.close();
+          }
+
+          await browser.close();
+          EOF
+          node capture.mjs
+
+      - name: Commit verified screenshots
+        run: |
+          mkdir -p public/projects
+          cp captured-projects/aloia.webp public/projects/aloia.webp
+          cp captured-projects/transcripcion-pdf.webp public/projects/transcripcion-pdf.webp
+          cp captured-projects/harbest.webp public/projects/harbest.webp
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/projects/aloia.webp public/projects/transcripcion-pdf.webp public/projects/harbest.webp
+          git commit -m "Add verified screenshots for Aloia, Transcripción a PDF and Harbest"
+          git push origin HEAD:capture-new-projects
