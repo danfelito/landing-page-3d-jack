@@ -1,0 +1,82 @@
+name: Verify live portfolio projects
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright
+          npx playwright install --with-deps chromium
+
+      - name: Wait for Render deployment and verify assets
+        run: |
+          set -euo pipefail
+          site="https://landing-page-3d-jack.onrender.com"
+          success=0
+          for attempt in $(seq 1 40); do
+            echo "Attempt $attempt"
+            html="$(curl -fsSL --max-time 30 "$site/?verify=$attempt" || true)"
+            bundle="$(printf '%s' "$html" | grep -oE '/assets/index-[^" ]+\.js' | head -n1 || true)"
+            if [ -n "$bundle" ]; then
+              js="$(curl -fsSL --max-time 30 "$site$bundle" || true)"
+              if printf '%s' "$js" | grep -q 'Transcripción a PDF' \
+                && printf '%s' "$js" | grep -q 'HarBest' \
+                && curl -fsSL --max-time 30 "$site/projects/aloia.webp?v=8" -o /tmp/aloia.webp \
+                && curl -fsSL --max-time 30 "$site/projects/transcripcion-pdf.webp?v=8" -o /tmp/transcripcion-pdf.webp \
+                && curl -fsSL --max-time 30 "$site/projects/harbest.webp?v=8" -o /tmp/harbest.webp \
+                && [ "$(stat -c%s /tmp/aloia.webp)" -gt 10000 ] \
+                && [ "$(stat -c%s /tmp/transcripcion-pdf.webp)" -gt 10000 ] \
+                && [ "$(stat -c%s /tmp/harbest.webp)" -gt 10000 ]; then
+                success=1
+                break
+              fi
+            fi
+            sleep 15
+          done
+          test "$success" -eq 1
+
+      - name: Capture live carousel
+        run: |
+          cat > verify-live.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import fs from 'node:fs/promises';
+
+          await fs.mkdir('live-verification', { recursive: true });
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+          await page.goto('https://landing-page-3d-jack.onrender.com/?live-verification=1', {
+            waitUntil: 'domcontentloaded',
+            timeout: 120000,
+          });
+          await page.waitForTimeout(10000);
+          const heading = page.getByText('Proyectos en línea', { exact: true });
+          await heading.scrollIntoViewIfNeeded();
+          await page.waitForTimeout(2500);
+          await page.screenshot({ path: 'live-verification/projects-live.png', fullPage: false });
+          await browser.close();
+          EOF
+          node verify-live.mjs
+
+      - name: Upload live screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: live-projects-verification
+          path: live-verification/projects-live.png
+          if-no-files-found: error
