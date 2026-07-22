@@ -1,11 +1,13 @@
 name: Capture project screenshots
 
 on:
-  pull_request:
-    branches: [main]
+  push:
+    branches: [capture-new-projects]
+    paths:
+      - .github/workflows/capture-projects.yml
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   capture:
@@ -34,7 +36,7 @@ jobs:
 
           const projects = [
             { name: 'aloia', url: 'https://aloia.space-z.ai/', wait: 18000 },
-            { name: 'art-r115468', url: 'https://chat.z.ai/space/r115468vw860-art', wait: 18000 },
+            { name: 'transcripcion-pdf', url: 'https://chat.z.ai/space/r115468vw860-art', wait: 18000 },
             { name: 'harbest', url: 'https://harbestlanding.danfelavicas.workers.dev/#inicio', wait: 12000 },
           ];
 
@@ -50,33 +52,30 @@ jobs:
           for (const project of projects) {
             const page = await context.newPage();
             page.setDefaultTimeout(120000);
-            try {
-              await page.goto(project.url, { waitUntil: 'domcontentloaded', timeout: 120000 });
-              await page.waitForTimeout(project.wait);
-              await page.evaluate(() => window.scrollTo(0, 0));
-              await page.waitForTimeout(1500);
-              const png = `captured-projects/${project.name}.png`;
-              const webp = `captured-projects/${project.name}.webp`;
-              await page.screenshot({ path: png, fullPage: false });
-              await sharp(png).webp({ quality: 88 }).toFile(webp);
-              console.log(`${project.name}: ${await page.title()} -> ${page.url()}`);
-            } catch (error) {
-              console.error(`${project.name} failed:`, error);
-              await page.screenshot({ path: `captured-projects/${project.name}-error.png`, fullPage: false }).catch(() => {});
-              process.exitCode = 1;
-            } finally {
-              await page.close();
-            }
+            await page.goto(project.url, { waitUntil: 'domcontentloaded', timeout: 120000 });
+            await page.waitForTimeout(project.wait);
+            await page.evaluate(() => window.scrollTo(0, 0));
+            await page.waitForTimeout(1500);
+            const png = `captured-projects/${project.name}.png`;
+            const webp = `captured-projects/${project.name}.webp`;
+            await page.screenshot({ path: png, fullPage: false });
+            await sharp(png).webp({ quality: 88 }).toFile(webp);
+            console.log(`${project.name}: ${await page.title()} -> ${page.url()}`);
+            await page.close();
           }
 
           await browser.close();
           EOF
           node capture.mjs
 
-      - name: Upload screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: project-screenshots
-          path: captured-projects/
-          if-no-files-found: error
+      - name: Commit verified screenshots
+        run: |
+          mkdir -p public/projects
+          cp captured-projects/aloia.webp public/projects/aloia.webp
+          cp captured-projects/transcripcion-pdf.webp public/projects/transcripcion-pdf.webp
+          cp captured-projects/harbest.webp public/projects/harbest.webp
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/projects/aloia.webp public/projects/transcripcion-pdf.webp public/projects/harbest.webp
+          git commit -m "Add verified screenshots for Aloia, Transcripción a PDF and Harbest"
+          git push origin HEAD:capture-new-projects
