@@ -1,0 +1,68 @@
+name: Capture Circulo Bienes Raices
+
+on:
+  push:
+    branches: [add-circulo-bienes-raices]
+    paths:
+      - .github/workflows/capture-circulo-bienes-raices.yml
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install browser tools
+        run: |
+          npm install --no-save playwright sharp
+          npx playwright install --with-deps chromium
+
+      - name: Capture loaded project
+        run: |
+          cat > capture.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import sharp from 'sharp';
+          import fs from 'node:fs/promises';
+
+          await fs.mkdir('public/projects', { recursive: true });
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({
+            viewport: { width: 1440, height: 900 },
+            deviceScaleFactor: 1,
+            locale: 'es-MX',
+            colorScheme: 'light',
+          });
+
+          await page.goto('https://circulo-bienes-raices-1.onrender.com/', {
+            waitUntil: 'domcontentloaded',
+            timeout: 120000,
+          });
+          await page.waitForTimeout(18000);
+          await page.evaluate(() => window.scrollTo(0, 0));
+          await page.waitForTimeout(1500);
+          await page.screenshot({ path: 'circulo-bienes-raices.png', fullPage: false });
+          await sharp('circulo-bienes-raices.png')
+            .webp({ quality: 88 })
+            .toFile('public/projects/circulo-bienes-raices.webp');
+          console.log(`${await page.title()} -> ${page.url()}`);
+          await browser.close();
+          EOF
+          node capture.mjs
+
+      - name: Commit screenshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/projects/circulo-bienes-raices.webp
+          git commit -m "Add Circulo Bienes Raices screenshot"
+          git push origin HEAD:add-circulo-bienes-raices
