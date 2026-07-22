@@ -1,0 +1,82 @@
+name: Capture project screenshots
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install browser tools
+        run: |
+          npm install --no-save playwright sharp
+          npx playwright install --with-deps chromium
+
+      - name: Capture loaded project views
+        run: |
+          cat > /tmp/capture.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import sharp from 'sharp';
+          import fs from 'node:fs/promises';
+
+          const projects = [
+            { name: 'aloia', url: 'https://aloia.space-z.ai/', wait: 18000 },
+            { name: 'art-r115468', url: 'https://chat.z.ai/space/r115468vw860-art', wait: 18000 },
+            { name: 'harbest', url: 'https://harbestlanding.danfelavicas.workers.dev/#inicio', wait: 12000 },
+          ];
+
+          await fs.mkdir('captured-projects', { recursive: true });
+          const browser = await chromium.launch({ headless: true });
+          const context = await browser.newContext({
+            viewport: { width: 1440, height: 900 },
+            deviceScaleFactor: 1,
+            locale: 'es-MX',
+            colorScheme: 'dark',
+          });
+
+          for (const project of projects) {
+            const page = await context.newPage();
+            page.setDefaultTimeout(120000);
+            try {
+              await page.goto(project.url, { waitUntil: 'domcontentloaded', timeout: 120000 });
+              await page.waitForTimeout(project.wait);
+              await page.evaluate(() => window.scrollTo(0, 0));
+              await page.waitForTimeout(1500);
+              const png = `captured-projects/${project.name}.png`;
+              const webp = `captured-projects/${project.name}.webp`;
+              await page.screenshot({ path: png, fullPage: false });
+              await sharp(png).webp({ quality: 88 }).toFile(webp);
+              console.log(`${project.name}: ${await page.title()} -> ${page.url()}`);
+            } catch (error) {
+              console.error(`${project.name} failed:`, error);
+              await page.screenshot({ path: `captured-projects/${project.name}-error.png`, fullPage: false }).catch(() => {});
+              process.exitCode = 1;
+            } finally {
+              await page.close();
+            }
+          }
+
+          await browser.close();
+          EOF
+          node /tmp/capture.mjs
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: project-screenshots
+          path: captured-projects/
+          if-no-files-found: error
