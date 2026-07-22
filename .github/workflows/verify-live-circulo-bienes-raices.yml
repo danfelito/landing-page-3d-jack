@@ -1,0 +1,35 @@
+name: Verify live Circulo Bienes Raices
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Wait for Render deployment and verify project
+        run: |
+          set -euo pipefail
+          site="https://landing-page-3d-jack.onrender.com"
+          success=0
+          for attempt in $(seq 1 40); do
+            echo "Attempt $attempt"
+            html="$(curl -fsSL --max-time 30 "$site/?verify-circulo=$attempt" || true)"
+            bundle="$(printf '%s' "$html" | grep -oE '/assets/index-[^" ]+\.js' | head -n1 || true)"
+            if [ -n "$bundle" ]; then
+              js="$(curl -fsSL --max-time 30 "$site$bundle" || true)"
+              if printf '%s' "$js" | grep -q 'Círculo Bienes Raíces' \
+                && curl -fsSL --max-time 30 "$site/projects/circulo-bienes-raices.webp?v=1" -o /tmp/circulo.webp \
+                && [ "$(stat -c%s /tmp/circulo.webp)" -gt 10000 ]; then
+                success=1
+                break
+              fi
+            fi
+            sleep 15
+          done
+          test "$success" -eq 1
