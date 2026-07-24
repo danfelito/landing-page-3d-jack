@@ -51,6 +51,15 @@ const projects: Project[] = [
     imagePosition: 'top',
   },
   {
+    slug: 'embriones-do-brasil',
+    title: 'Embriones do Brasil',
+    url: 'https://embriones-do-brasil.onrender.com/',
+    platform: 'Render',
+    description: 'Portal ganadero para presentar embriones, cruzas, genética y novedades del proyecto.',
+    images: ['/projects/embriones-do-brasil.webp?v=1'],
+    imagePosition: 'top',
+  },
+  {
     slug: 'firma-de-comisiones',
     title: 'Firma de Comisiones',
     url: 'https://firma-de-comisiones-1.onrender.com/',
