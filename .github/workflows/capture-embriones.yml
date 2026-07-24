@@ -1,0 +1,70 @@
+name: Capture Embriones do Brasil
+
+on:
+  push:
+    branches: [add-embriones-do-brasil]
+    paths:
+      - .github/workflows/capture-embriones.yml
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install browser tools
+        run: |
+          npm install --no-save playwright sharp
+          npx playwright install --with-deps chromium
+
+      - name: Capture loaded project
+        run: |
+          cat > capture-embriones.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import sharp from 'sharp';
+          import fs from 'node:fs/promises';
+
+          await fs.mkdir('captured-projects', { recursive: true });
+          const browser = await chromium.launch({ headless: true });
+          const page = await browser.newPage({
+            viewport: { width: 1440, height: 900 },
+            deviceScaleFactor: 1,
+            locale: 'es-MX',
+            colorScheme: 'dark',
+          });
+          page.setDefaultTimeout(120000);
+          await page.goto('https://embriones-do-brasil.onrender.com/', {
+            waitUntil: 'domcontentloaded',
+            timeout: 120000,
+          });
+          await page.waitForTimeout(25000);
+          await page.evaluate(() => window.scrollTo(0, 0));
+          await page.waitForTimeout(2000);
+          await page.screenshot({ path: 'captured-projects/embriones-do-brasil.png', fullPage: false });
+          await sharp('captured-projects/embriones-do-brasil.png')
+            .webp({ quality: 88 })
+            .toFile('captured-projects/embriones-do-brasil.webp');
+          console.log(`${await page.title()} -> ${page.url()}`);
+          await browser.close();
+          EOF
+          node capture-embriones.mjs
+
+      - name: Commit verified screenshot
+        run: |
+          mkdir -p public/projects
+          cp captured-projects/embriones-do-brasil.webp public/projects/embriones-do-brasil.webp
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/projects/embriones-do-brasil.webp
+          git commit -m "Add verified screenshot for Embriones do Brasil"
+          git push origin HEAD:add-embriones-do-brasil
