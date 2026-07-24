@@ -1,0 +1,52 @@
+name: Patch Embriones do Brasil project
+
+on:
+  push:
+    branches: [add-embriones-do-brasil]
+    paths:
+      - .github/workflows/patch-embriones.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: add-embriones-do-brasil
+
+      - name: Insert project entry
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+          const path = 'src/App.tsx';
+          let source = fs.readFileSync(path, 'utf8');
+          if (!source.includes("slug: 'embriones-do-brasil'")) {
+            const marker = "  {\n    slug: 'firma-de-comisiones',";
+            const entry = "  {\n" +
+              "    slug: 'embriones-do-brasil',\n" +
+              "    title: 'Embriones do Brasil',\n" +
+              "    url: 'https://embriones-do-brasil.onrender.com/',\n" +
+              "    platform: 'Render',\n" +
+              "    description: 'Portal ganadero para presentar embriones, cruzas, genética y novedades del proyecto.',\n" +
+              "    images: ['/projects/embriones-do-brasil.webp?v=1'],\n" +
+              "    imagePosition: 'top',\n" +
+              "  },\n";
+            if (!source.includes(marker)) throw new Error('No se encontró el punto de inserción');
+            source = source.replace(marker, entry + marker);
+            fs.writeFileSync(path, source);
+          }
+          EOF
+
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.tsx
+          if ! git diff --cached --quiet; then
+            git commit -m "Add Embriones do Brasil project entry"
+            git push origin HEAD:add-embriones-do-brasil
+          fi
