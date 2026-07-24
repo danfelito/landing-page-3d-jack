@@ -59,12 +59,40 @@ jobs:
           EOF
           node capture-embriones.mjs
 
-      - name: Commit verified screenshot
+      - name: Add project to portfolio data
+        run: |
+          cat > add-project.mjs <<'EOF'
+          import fs from 'node:fs/promises';
+
+          const appPath = 'src/App.tsx';
+          let source = await fs.readFile(appPath, 'utf8');
+          if (!source.includes("slug: 'embriones-do-brasil'")) {
+            const marker = "  {\n    slug: 'firma-de-comisiones',";
+            const project = `  {
+              slug: 'embriones-do-brasil',
+              title: 'Embriones do Brasil',
+              url: 'https://embriones-do-brasil.onrender.com/',
+              platform: 'Render',
+              description: 'Portal ganadero para presentar embriones, cruzas, genética y novedades del proyecto.',
+              images: ['/projects/embriones-do-brasil.webp?v=1'],
+              imagePosition: 'top',
+            },
+          `;
+            if (!source.includes(marker)) throw new Error('No se encontró el punto de inserción en src/App.tsx');
+            source = source.replace(marker, project + marker);
+            await fs.writeFile(appPath, source);
+          }
+          EOF
+          node add-project.mjs
+
+      - name: Commit project and verified screenshot
         run: |
           mkdir -p public/projects
           cp captured-projects/embriones-do-brasil.webp public/projects/embriones-do-brasil.webp
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add public/projects/embriones-do-brasil.webp
-          git commit -m "Add verified screenshot for Embriones do Brasil"
-          git push origin HEAD:add-embriones-do-brasil
+          git add src/App.tsx public/projects/embriones-do-brasil.webp
+          if ! git diff --cached --quiet; then
+            git commit -m "Add Embriones do Brasil to portfolio"
+            git push origin HEAD:add-embriones-do-brasil
+          fi
