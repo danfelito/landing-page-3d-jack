@@ -1,0 +1,41 @@
+name: Verify Embriones do Brasil live
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify production bundle and image
+        run: |
+          set -euo pipefail
+          site="https://landing-page-3d-jack.onrender.com"
+          success=0
+          for attempt in $(seq 1 30); do
+            echo "Attempt $attempt"
+            html="$(curl -fsSL --max-time 30 "$site/?verify-embriones=$attempt" || true)"
+            bundle="$(printf '%s' "$html" | grep -oE '/assets/index-[^" ]+\.js' | head -n1 || true)"
+            echo "Bundle: ${bundle:-not-found}"
+            if [ -n "$bundle" ]; then
+              js="$(curl -fsSL --max-time 30 "$site$bundle" || true)"
+              if printf '%s' "$js" | grep -q 'Embriones do Brasil' \
+                && printf '%s' "$js" | grep -q 'embriones-do-brasil.onrender.com' \
+                && curl -fsSL --max-time 30 "$site/projects/embriones-do-brasil.webp?v=1" -o /tmp/embriones.webp \
+                && [ "$(stat -c%s /tmp/embriones.webp)" -gt 10000 ]; then
+                echo "Production contains the new project and image."
+                success=1
+                break
+              fi
+            fi
+            sleep 15
+          done
+          test "$success" -eq 1
