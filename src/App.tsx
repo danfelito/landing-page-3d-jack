@@ -13,8 +13,7 @@ type Project = {
   imagePosition?: 'top' | 'center';
 };
 
-const ORIGINAL_HERO_IMAGE =
-  'https://shrug-person-78902957.figma.site/_components/v2/d24c01ad3a56fc65e942a1f501eb73db42d7cf9a/Rectangle_40443.81459862.png';
+const HERO_IMAGE = '/images/daniel-garbage-pail-honey-eyes.webp?v=1';
 
 const whatsappUrl =
   'https://wa.me/522294648962?text=Hola%20Daniel%2C%20vi%20tu%20portafolio%20y%20quiero%20hablar%20sobre%20un%20proyecto.';
@@ -166,10 +165,10 @@ function ContactButton() {
 function HeroPortrait() {
   return (
     <img
-      src={ORIGINAL_HERO_IMAGE}
-      alt="Retrato original del portafolio de Daniel"
-      width={916}
-      height={1000}
+      src={HERO_IMAGE}
+      alt="Retrato 3D de Daniel con ojos café miel"
+      width={1233}
+      height={1275}
       loading="eager"
       fetchPriority="high"
       decoding="async"
