@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { startHeroPointerMotion } from './heroPointerMotion';
+import { startAnalytics } from './analytics';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 );
 
 const stopHeroPointerMotion = startHeroPointerMotion();
+const stopAnalytics = startAnalytics();
 
 if (import.meta.hot) {
   import.meta.hot.dispose(stopHeroPointerMotion);
+  import.meta.hot.dispose(stopAnalytics);
 }

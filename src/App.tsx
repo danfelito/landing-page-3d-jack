@@ -1,6 +1,7 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowUpRight, ExternalLink, Mail, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import AnalyticsControls from './AnalyticsControls';
 
 type Project = {
   slug: string;
@@ -152,6 +153,7 @@ function ContactButton() {
   return (
     <a
       href={whatsappUrl}
+      data-analytics-contact="whatsapp"
       target="_blank"
       rel="noreferrer"
       className="inline-flex items-center gap-2 rounded-full border-2 border-white px-6 py-3 text-xs font-semibold uppercase tracking-[.18em] text-white transition hover:scale-105 sm:px-8"
@@ -180,7 +182,7 @@ function HeroPortrait() {
 
 function HeroSection() {
   return (
-    <section className="relative isolate min-h-[760px] overflow-hidden bg-ink sm:min-h-[820px] lg:min-h-screen">
+    <section data-analytics-location="portada" className="relative isolate min-h-[760px] overflow-hidden bg-ink sm:min-h-[820px] lg:min-h-screen">
       <div className="hero-aura" aria-hidden="true" />
 
       <nav className="relative z-40 mx-auto flex max-w-[1600px] flex-wrap justify-center gap-x-5 gap-y-2 px-5 pt-6 text-[11px] font-medium uppercase tracking-[.14em] text-ice sm:justify-between sm:px-8 sm:text-sm md:px-10 md:text-base">
@@ -299,6 +301,7 @@ function ProjectPreview({ project }: { project: Project }) {
   return (
     <a
       href={project.url}
+      data-analytics-project={project.slug}
       target="_blank"
       rel="noreferrer"
       className={className}
@@ -326,7 +329,7 @@ function PublishedProjectsCarousel() {
   }, []);
 
   return (
-    <section ref={ref} className="overflow-hidden bg-ink py-20 sm:py-28">
+    <section ref={ref} data-analytics-location="carrusel" className="overflow-hidden bg-ink py-20 sm:py-28">
       <div className="mx-auto mb-10 max-w-5xl px-5 text-center">
         <p className="text-xs uppercase tracking-[.3em] text-ice/55">Muestras reales publicadas</p>
         <h2 className="hero-heading mt-3 text-[clamp(2.8rem,8vw,7rem)] font-black uppercase leading-none">
@@ -354,7 +357,7 @@ function AboutSection() {
     <section id="about" className="flex min-h-[65vh] items-center justify-center bg-ink px-6 py-24">
       <div className="max-w-3xl text-center">
         <FadeIn>
-          <h2 className="hero-heading text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">
+          <h2 data-analytics-section="acerca-de" className="hero-heading text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">
             Sobre mí
           </h2>
           <p className="mx-auto mt-10 max-w-2xl text-[clamp(1rem,2vw,1.35rem)] leading-relaxed text-ice">
@@ -369,7 +372,7 @@ function AboutSection() {
 function ServicesSection() {
   return (
     <section id="servicios" className="rounded-t-[46px] bg-white px-5 py-24 text-ink md:px-10">
-      <h2 className="mb-16 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">
+      <h2 data-analytics-section="servicios" className="mb-16 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">
         Servicios
       </h2>
       <div className="mx-auto max-w-5xl">
@@ -377,7 +380,7 @@ function ServicesSection() {
           <div key={number} className="grid grid-cols-[.3fr_1fr] gap-5 border-t border-black/15 py-9 last:border-b">
             <span className="text-[clamp(3rem,8vw,7rem)] font-black leading-none">{number}</span>
             <div>
-              <h3 className="text-[clamp(1.1rem,2.5vw,2rem)] font-semibold uppercase">{title}</h3>
+              <h3 data-analytics-service={title} className="text-[clamp(1.1rem,2.5vw,2rem)] font-semibold uppercase">{title}</h3>
               <p className="mt-3 max-w-2xl text-base leading-relaxed opacity-60">{description}</p>
             </div>
           </div>
@@ -412,7 +415,7 @@ function ProjectCard({ project }: { project: Project }) {
   }
 
   return (
-    <a href={project.url} target="_blank" rel="noreferrer" className={className}>
+    <a href={project.url} data-analytics-project={project.slug} target="_blank" rel="noreferrer" className={className}>
       {content}
     </a>
   );
@@ -420,8 +423,8 @@ function ProjectCard({ project }: { project: Project }) {
 
 function ProjectsSection() {
   return (
-    <section id="proyectos" className="bg-ink px-5 py-24 md:px-10">
-      <h2 className="hero-heading mb-12 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">
+    <section id="proyectos" data-analytics-location="seleccion" className="bg-ink px-5 py-24 md:px-10">
+      <h2 data-analytics-section="proyectos" className="hero-heading mb-12 text-center text-[clamp(3.5rem,10vw,9rem)] font-black uppercase leading-none">
         Selección
       </h2>
       <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
@@ -435,14 +438,15 @@ function ProjectsSection() {
 
 function ContactSection() {
   return (
-    <section id="contacto" className="bg-ink px-6 py-28 text-center text-ice">
-      <h2 className="hero-heading text-[clamp(3rem,9vw,8rem)] font-black uppercase">Hablemos</h2>
+    <section id="contacto" data-analytics-location="contacto" className="bg-ink px-6 py-28 text-center text-ice">
+      <h2 data-analytics-section="contacto" className="hero-heading text-[clamp(3rem,9vw,8rem)] font-black uppercase">Hablemos</h2>
       <p className="mx-auto mt-5 max-w-xl text-lg text-ice/70">
         Disponible para proyectos de diseño, desarrollo web, automatización e inteligencia artificial.
       </p>
       <div className="mt-9 flex flex-wrap justify-center gap-4">
         <a
           href={whatsappUrl}
+          data-analytics-contact="whatsapp"
           target="_blank"
           rel="noreferrer"
           className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 transition hover:bg-white/10"
@@ -451,6 +455,7 @@ function ContactSection() {
         </a>
         <a
           href={emailUrl}
+          data-analytics-contact="email"
           className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 transition hover:bg-white/10"
         >
           <Mail size={19} /> danfelavicas@gmail.com
@@ -469,6 +474,7 @@ export default function App() {
       <ServicesSection />
       <ProjectsSection />
       <ContactSection />
+      <AnalyticsControls />
     </main>
   );
 }
