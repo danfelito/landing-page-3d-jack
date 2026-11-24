@@ -19,7 +19,7 @@ const HERO_IMAGE = '/images/daniel-garbage-pail-honey-eyes.webp?v=1';
 const whatsappUrl =
   'https://wa.me/522294648962?text=Hola%20Daniel%2C%20vi%20tu%20portafolio%20y%20quiero%20hablar%20sobre%20un%20proyecto.';
 const emailUrl =
-  'mailto:danfelavicas@gmail.com?subject=Contacto%20desde%20el%20portafolio%20de%20Daniel';
+  'mailto:contacto@brasilbusiness.shop?subject=Contacto%20desde%20el%20portafolio%20de%20Daniel';
 
 const projects: Project[] = [
   {
@@ -458,7 +458,7 @@ function ContactSection() {
           data-analytics-contact="email"
           className="inline-flex items-center gap-2 rounded-full border border-white/25 px-6 py-3 transition hover:bg-white/10"
         >
-          <Mail size={19} /> danfelavicas@gmail.com
+          <Mail size={19} /> contacto@brasilbusiness.shop
         </a>
       </div>
     </section>
